@@ -110,6 +110,7 @@ export const webworker = (props: RuntimeProps) => {
 
         // Set up LSP events handlers per server
         const lsp: Lsp = {
+            addRpcIntitializer: lspServer.setRpcInitializeHandler,
             addInitializer: lspServer.setInitializeHandler,
             onInitialized: handler =>
                 lspConnection.onInitialized(p => {

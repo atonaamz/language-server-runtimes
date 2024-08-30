@@ -4,19 +4,22 @@ import {
     InitializeError,
     InitializeParams,
     InitializeResult,
+    RequestHandler,
+    RequestType,
     ResponseError,
     TextDocumentSyncKind,
 } from '../../../protocol'
 import { Connection } from 'vscode-languageserver/node'
 import { LspServer } from './lspServer'
 import { mergeObjects } from './util'
+import { Rpc, EmbeddedRpc } from '../../../server-interface/rpc'
 
 export class LspRouter {
     public clientInitializeParams?: InitializeParams
     public servers: LspServer[] = []
 
     constructor(
-        lspConnection: Connection,
+        private readonly lspConnection: Connection,
         private name: string,
         private version?: string
     ) {
@@ -47,6 +50,14 @@ export class LspRouter {
         if (responsesList.some(el => el instanceof ResponseError)) {
             return responsesList.find(el => el instanceof ResponseError) as ResponseError<InitializeError>
         }
+
+        // Set up one-off RPCs, this is where each server gets to register one-off RPCs
+        {
+            const embeddedRpc = new EmbeddedRpc(this.lspConnection)
+            using rpc = new LspRouterRpc(this.lspConnection)
+            this.servers.map(s => s.rpcInitialize(rpc, embeddedRpc))
+        }
+
         const resultList = responsesList as InitializeResult[]
         resultList.unshift(defaultResponse)
         return resultList.reduceRight((acc, curr) => {
@@ -64,5 +75,32 @@ export class LspRouter {
                 return result
             }
         }
+    }
+}
+
+// The object that is provided as "rpc" in the rpcInitializer call.  For the embedded RPC,
+// see the ../../server-interface/rpc.ts file.
+// This is disposable so it can be rendered useless after the rpcInitializer call
+// so servers couldn't hang onto it and violate the lifecycle constraint.  However,
+// I'm not sure that constraint is even warranted, so it's possible that this could
+// be simplified.
+class LspRouterRpc implements Rpc, Disposable {
+    private isDisposed: boolean = false
+
+    constructor(private readonly connection: Connection) {}
+
+    [Symbol.dispose](): void {
+        this.isDisposed = true
+    }
+
+    private throwOnDisposed() {
+        if (this.isDisposed) {
+            throw new Error('Object is disposed')
+        }
+    }
+
+    public onRequest<P, R, E>(type: RequestType<P, R, E>, handler: RequestHandler<P, R, E>): void {
+        this.throwOnDisposed()
+        this.connection.onRequest<P, R, E>(type, handler)
     }
 }

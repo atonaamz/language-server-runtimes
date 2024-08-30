@@ -38,6 +38,7 @@ import {
     ShowDocumentParams,
     ShowDocumentResult,
 } from '../protocol'
+import { EmbeddedRpc, Rpc } from './rpc'
 
 // Re-export whole surface of LSP protocol used in Runtimes.
 // This is needed for LSP features as we pass messages down.
@@ -70,6 +71,7 @@ export type Lsp = {
      * Then the runtime will use the regiestered handlers and merge their responses when responding to initialize LSP request.
      *
      */
+    addRpcIntitializer: (handler: (rpc: Rpc, embeddedRpc: EmbeddedRpc) => void) => void
     addInitializer: (handler: RequestHandler<InitializeParams, PartialInitializeResult, InitializeError>) => void
     onInitialized: (handler: NotificationHandler<InitializedParams>) => void
     onInlineCompletion: (

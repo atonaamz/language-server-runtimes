@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.84](https://github.com/aws/language-server-runtimes/compare/language-server-runtimes/v0.2.83...language-server-runtimes/v0.2.84) (2025-05-19)
+
+
+### Bug Fixes
+
+* make test independent of sdk version ([#519](https://github.com/aws/language-server-runtimes/issues/519)) ([112feba](https://github.com/aws/language-server-runtimes/commit/112feba70219a98a12f13727d67c540205fa9c9f))
+
 ## [0.2.83](https://github.com/aws/language-server-runtimes/compare/language-server-runtimes/v0.2.82...language-server-runtimes/v0.2.83) (2025-05-19)
 
 
